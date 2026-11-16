@@ -12,24 +12,28 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Prepare Include Files
-        run: |
-          mkdir -p ./includes
-          unzip -q include.zip -d ./includes
-          # Pindahkan semua file .inc dan subfolder YSI yang bersarang ke root ./includes
-          find ./includes -name "*.inc" -exec cp -n {} ./includes/ \;
-          # Unduh standar include SA-MP 0.3.7-R2 jika belum ada di include.zip
-          if [ ! -f "./includes/a_samp.inc" ]; then
-            curl -sL https://github.com/pawn-lang/samp-stdlib/archive/refs/heads/master.zip -o stdlib.zip
-            unzip -q stdlib.zip -d ./stdlib_tmp
-            cp -n ./stdlib_tmp/samp-stdlib-master/*.inc ./includes/
-          fi
-
       - name: Download Pawn Compiler
         run: |
           curl -sL https://github.com/pawn-lang/compiler/releases/download/v3.10.10/pawnc-3.10.10-linux.tar.gz -o pawnc.tar.gz
           tar -xzf pawnc.tar.gz
           chmod +x pawnc-3.10.10-linux/bin/pawncc
+
+      - name: Prepare Include Files
+        run: |
+          mkdir -p ./includes
+          # Salin bawaan compiler Pawn (core.inc, float.inc, string.inc, dll.)
+          cp -n ./pawnc-3.10.10-linux/include/*.inc ./includes/
+          # Ekstrak include.zip dari repository
+          unzip -q include.zip -d ./includes
+          # Pindahkan semua file .inc dan subfolder YSI dari include.zip ke root ./includes
+          find ./includes -name "*.inc" -exec cp -n {} ./includes/ \;
+          if [ -d "./includes/include" ]; then cp -rn ./includes/include/* ./includes/; fi
+          # Unduh standar include SA-MP 0.3.7-R2 jika belum ada
+          if [ ! -f "./includes/a_samp.inc" ]; then
+            curl -sL https://github.com/pawn-lang/samp-stdlib/archive/refs/heads/master.zip -o stdlib.zip
+            unzip -q stdlib.zip -d ./stdlib_tmp
+            cp -n ./stdlib_tmp/samp-stdlib-master/*.inc ./includes/
+          fi
 
       - name: Compile ZOmbieNPC.pwn
         run: |
