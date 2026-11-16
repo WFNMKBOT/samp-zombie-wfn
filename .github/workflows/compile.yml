@@ -12,10 +12,10 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Compiler and Full SA-MP Includes
+      - name: Setup Compiler and All Includes
         run: |
           mkdir -p ./includes
-          # Ambil paket resmi SA-MP Windows yang berisi pawncc.exe + seluruh include lengkap (core, float, a_samp, dll.)
+          # Standar Pawn & SA-MP
           curl -sL https://github.com/pawn-lang/pawn-stdlib/archive/refs/heads/master.zip -o pawnstdlib.zip
           unzip -q pawnstdlib.zip -d ./pstdlib
           cp -rn ./pstdlib/pawn-stdlib-master/*.inc ./includes/
@@ -24,11 +24,19 @@ jobs:
           unzip -q sampstdlib.zip -d ./sstdlib
           cp -rn ./sstdlib/samp-stdlib-master/*.inc ./includes/
 
-          # Ekstrak include.zip milik Anda (timpa jika ada versi custom)
+          # Ekstrak include.zip dari repository Anda
           unzip -q include.zip -d ./includes_tmp
           find ./includes_tmp -name "*.inc" -exec cp -f {} ./includes/ \;
           if [ -d "./includes_tmp/YSI" ]; then cp -rf ./includes_tmp/YSI ./includes/; fi
           if [ -d "./includes_tmp/include" ]; then cp -rf ./includes_tmp/include/* ./includes/; fi
+
+          # Unduh fixes.inc & include plugin jika belum ada di include.zip
+          [ ! -f "./includes/fixes.inc" ] && curl -sL https://raw.githubusercontent.com/Open-GTO/sa-mp-fixes/master/fixes.inc -o ./includes/fixes.inc
+          [ ! -f "./includes/FCNPC.inc" ] && curl -sL https://raw.githubusercontent.com/ziggi/FCNPC/master/pawn/include/FCNPC.inc -o ./includes/FCNPC.inc
+          [ ! -f "./includes/ColAndreas.inc" ] && curl -sL https://raw.githubusercontent.com/Pottus/ColAndreas/master/Files/include/colandreas.inc -o ./includes/colandreas.inc
+          [ ! -f "./includes/streamer.inc" ] && curl -sL https://raw.githubusercontent.com/samp-incognito/samp-streamer-plugin/master/streamer.inc -o ./includes/streamer.inc
+          [ ! -f "./includes/sscanf2.inc" ] && curl -sL https://raw.githubusercontent.com/Y-Less/sscanf/master/sscanf2.inc -o ./includes/sscanf2.inc
+          [ ! -f "./includes/Pawn.CMD.inc" ] && curl -sL https://raw.githubusercontent.com/katursis/Pawn.CMD/master/Pawn.CMD.inc -o ./includes/Pawn.CMD.inc
 
           # Download compiler Linux
           curl -sL https://github.com/pawn-lang/compiler/releases/download/v3.10.10/pawnc-3.10.10-linux.tar.gz -o pawnc.tar.gz
