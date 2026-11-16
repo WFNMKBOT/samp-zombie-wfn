@@ -6,50 +6,40 @@ on:
   workflow_dispatch:
 
 jobs:
-  compile:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Compiler and All Includes
+      - name: Setup Pawn Compiler & SA-MP Includes
         run: |
-          mkdir -p ./includes
-          # Standar Pawn & SA-MP
-          curl -sL https://github.com/pawn-lang/pawn-stdlib/archive/refs/heads/master.zip -o pawnstdlib.zip
-          unzip -q pawnstdlib.zip -d ./pstdlib
-          cp -rn ./pstdlib/pawn-stdlib-master/*.inc ./includes/
+          mkdir -p compiler/include
+          # Download SA-MP 0.3.7 Linux Server (berisi pawno/include bawaan)
+          wget -q https://files.sa-mp.com/samp037svr_R2-1.tar.gz || wget -q https://github.com/samp-incognito/samp-server-archive/releases/download/0.3.7-R2-1/samp037svr_R2-1.tar.gz
+          tar -xzf samp037svr_R2-1.tar.gz
+          cp -r samp03/pawno/include/* compiler/include/
 
-          curl -sL https://github.com/pawn-lang/samp-stdlib/archive/refs/heads/master.zip -o sampstdlib.zip
-          unzip -q sampstdlib.zip -d ./sstdlib
-          cp -rn ./sstdlib/samp-stdlib-master/*.inc ./includes/
+          # Download Pawn Compiler (pawncc) Linux
+          wget -q https://github.com/pawn-lang/compiler/releases/download/v3.10.10/pawnc-3.10.10-linux.tar.gz
+          tar -xzf pawnc-3.10.10-linux.tar.gz
+          cp pawnc-3.10.10-linux/bin/pawncc compiler/
+          cp pawnc-3.10.10-linux/lib/libpawnc.so compiler/
+          chmod +x compiler/pawncc
 
-          # Ekstrak include.zip dari repository Anda
-          unzip -q include.zip -d ./includes_tmp
-          find ./includes_tmp -name "*.inc" -exec cp -f {} ./includes/ \;
-          if [ -d "./includes_tmp/YSI" ]; then cp -rf ./includes_tmp/YSI ./includes/; fi
-          if [ -d "./includes_tmp/include" ]; then cp -rf ./includes_tmp/include/* ./includes/; fi
+          # Download FCNPC v2.0.5 (Include + Plugin Linux sinkron)
+          wget -q https://github.com/ziggi/FCNPC/releases/download/2.0.5/FCNPC-2.0.5-linux.tar.gz
+          tar -xzf FCNPC-2.0.5-linux.tar.gz
+          cp pawno/include/FCNPC.inc compiler/include/
+          mkdir -p output/plugins output/gamemodes
+          cp plugins/FCNPC.so output/plugins/
 
-          # Unduh fixes.inc & include plugin jika belum ada di include.zip
-          [ ! -f "./includes/fixes.inc" ] && curl -sL https://raw.githubusercontent.com/Open-GTO/sa-mp-fixes/master/fixes.inc -o ./includes/fixes.inc
-          [ ! -f "./includes/FCNPC.inc" ] && curl -sL https://raw.githubusercontent.com/ziggi/FCNPC/master/pawn/include/FCNPC.inc -o ./includes/FCNPC.inc
-          [ ! -f "./includes/ColAndreas.inc" ] && curl -sL https://raw.githubusercontent.com/Pottus/ColAndreas/master/Files/include/colandreas.inc -o ./includes/colandreas.inc
-          [ ! -f "./includes/streamer.inc" ] && curl -sL https://raw.githubusercontent.com/samp-incognito/samp-streamer-plugin/master/streamer.inc -o ./includes/streamer.inc
-          [ ! -f "./includes/sscanf2.inc" ] && curl -sL https://raw.githubusercontent.com/Y-Less/sscanf/master/sscanf2.inc -o ./includes/sscanf2.inc
-          [ ! -f "./includes/Pawn.CMD.inc" ] && curl -sL https://raw.githubusercontent.com/katursis/Pawn.CMD/master/Pawn.CMD.inc -o ./includes/Pawn.CMD.inc
-
-          # Download compiler Linux
-          curl -sL https://github.com/pawn-lang/compiler/releases/download/v3.10.10/pawnc-3.10.10-linux.tar.gz -o pawnc.tar.gz
-          tar -xzf pawnc.tar.gz
-          chmod +x pawnc-3.10.10-linux/bin/pawncc
-
-      - name: Compile ZOmbieNPC.pwn
+      - name: Compile zombie_npc.pwn
         run: |
-          export LD_LIBRARY_PATH=$PWD/pawnc-3.10.10-linux/lib:$LD_LIBRARY_PATH
-          ./pawnc-3.10.10-linux/bin/pawncc ZOmbieNPC.pwn -i./includes -oZOmbieNPC.amx "-;+" "-(+"
+          LD_LIBRARY_PATH=./compiler ./compiler/pawncc zombie_npc.pwn -ooutput/gamemodes/zombie_npc.amx -icompiler/include -;+ -(+
 
-      - name: Upload Compiled AMX
+      - name: Upload Hasil Build (AMX + FCNPC.so)
         uses: actions/upload-artifact@v4
         with:
-          name: ZOmbieNPC-amx
-          path: ZOmbieNPC.amx
+          name: samp-zombie-files
+          path: output/
