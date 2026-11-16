@@ -12,11 +12,18 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Extract Include Files
+      - name: Prepare Include Files
         run: |
           mkdir -p ./includes
           unzip -q include.zip -d ./includes
-          if [ -d "./includes/include" ]; then mv ./includes/include/* ./includes/; fi
+          # Pindahkan semua file .inc dan subfolder YSI yang bersarang ke root ./includes
+          find ./includes -name "*.inc" -exec cp -n {} ./includes/ \;
+          # Unduh standar include SA-MP 0.3.7-R2 jika belum ada di include.zip
+          if [ ! -f "./includes/a_samp.inc" ]; then
+            curl -sL https://github.com/pawn-lang/samp-stdlib/archive/refs/heads/master.zip -o stdlib.zip
+            unzip -q stdlib.zip -d ./stdlib_tmp
+            cp -n ./stdlib_tmp/samp-stdlib-master/*.inc ./includes/
+          fi
 
       - name: Download Pawn Compiler
         run: |
