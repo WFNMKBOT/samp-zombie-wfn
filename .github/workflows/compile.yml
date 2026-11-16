@@ -24,10 +24,10 @@ jobs:
           tar -xzf pawnc.tar.gz
           chmod +x pawnc-3.10.10-linux/bin/pawncc
 
-      - name: Compile ZOmbieNPC.pwn
+            - name: Compile ZOmbieNPC.pwn
         run: |
           export LD_LIBRARY_PATH=$PWD/pawnc-3.10.10-linux/lib:$LD_LIBRARY_PATH
-          ./pawnc-3.10.10-linux/bin/pawncc ZOmbieNPC.pwn -i./includes -oZOmbieNPC.amx -;+ -(+
+          ./pawnc-3.10.10-linux/bin/pawncc ZOmbieNPC.pwn -i./includes -oZOmbieNPC.amx "-;+" "-(+"
 
       - name: Upload Compiled AMX
         uses: actions/upload-artifact@v4
