@@ -21,19 +21,19 @@ jobs:
           git clone --depth 1 https://github.com/pawn-lang/samp-stdlib.git /tmp/samp-stdlib
           cp -r /tmp/samp-stdlib/*.inc compiler/include/
 
-          # 2. Ambil URL asli rilis terbaru Pawn Compiler Linux dari API GitHub
+          # 2. Download Pawn Compiler Linux
           PAWNC_URL=$(curl -s https://api.github.com/repos/pawn-lang/compiler/releases/latest | grep "browser_download_url.*linux\.tar\.gz" | cut -d '"' -f 4 | head -n 1)
           echo "Downloading Pawn Compiler: $PAWNC_URL"
           curl -fL "$PAWNC_URL" -o pawnc.tar.gz
           tar -xzf pawnc.tar.gz --strip-components=1 -C compiler/
           chmod +x compiler/bin/pawncc
 
-          # 3. Ambil URL asli rilis terbaru FCNPC Linux dari API GitHub
-          FCNPC_URL=$(curl -s https://api.github.com/repos/ziggi/FCNPC/releases/latest | grep "browser_download_url.*linux\.tar\.gz" | cut -d '"' -f 4 | head -n 1)
+          # 3. Download FCNPC Linux (.zip) dari rilis terbaru
+          FCNPC_URL=$(curl -s https://api.github.com/repos/ziggi/FCNPC/releases/latest | grep -i "browser_download_url.*linux\.zip" | cut -d '"' -f 4 | head -n 1)
           echo "Downloading FCNPC: $FCNPC_URL"
-          curl -fL "$FCNPC_URL" -o fcnpc.tar.gz
+          curl -fL "$FCNPC_URL" -o fcnpc.zip
           mkdir -p /tmp/fcnpc
-          tar -xzf fcnpc.tar.gz -C /tmp/fcnpc
+          unzip -q fcnpc.zip -d /tmp/fcnpc
           find /tmp/fcnpc -name "FCNPC.inc" -exec cp {} compiler/include/ \;
           find /tmp/fcnpc -name "FCNPC.so" -exec cp {} output/plugins/ \;
 
