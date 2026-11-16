@@ -12,24 +12,28 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Download Pawn Compiler
+      - name: Setup Compiler and Full SA-MP Includes
         run: |
+          mkdir -p ./includes
+          # Ambil paket resmi SA-MP Windows yang berisi pawncc.exe + seluruh include lengkap (core, float, a_samp, dll.)
+          curl -sL https://github.com/pawn-lang/pawn-stdlib/archive/refs/heads/master.zip -o pawnstdlib.zip
+          unzip -q pawnstdlib.zip -d ./pstdlib
+          cp -rn ./pstdlib/pawn-stdlib-master/*.inc ./includes/
+
+          curl -sL https://github.com/pawn-lang/samp-stdlib/archive/refs/heads/master.zip -o sampstdlib.zip
+          unzip -q sampstdlib.zip -d ./sstdlib
+          cp -rn ./sstdlib/samp-stdlib-master/*.inc ./includes/
+
+          # Ekstrak include.zip milik Anda (timpa jika ada versi custom)
+          unzip -q include.zip -d ./includes_tmp
+          find ./includes_tmp -name "*.inc" -exec cp -f {} ./includes/ \;
+          if [ -d "./includes_tmp/YSI" ]; then cp -rf ./includes_tmp/YSI ./includes/; fi
+          if [ -d "./includes_tmp/include" ]; then cp -rf ./includes_tmp/include/* ./includes/; fi
+
+          # Download compiler Linux
           curl -sL https://github.com/pawn-lang/compiler/releases/download/v3.10.10/pawnc-3.10.10-linux.tar.gz -o pawnc.tar.gz
           tar -xzf pawnc.tar.gz
           chmod +x pawnc-3.10.10-linux/bin/pawncc
-
-      - name: Prepare Include Files
-        run: |
-          mkdir -p ./includes
-          # Unduh standar include SA-MP lengkap (a_samp, core, float, string, dll.)
-          curl -sL https://github.com/pawn-lang/samp-stdlib/archive/refs/heads/master.zip -o stdlib.zip
-          unzip -q stdlib.zip -d ./stdlib_tmp
-          cp -rn ./stdlib_tmp/samp-stdlib-master/* ./includes/
-          # Ekstrak include.zip dari repository Anda
-          unzip -q include.zip -d ./includes_tmp
-          find ./includes_tmp -name "*.inc" -exec cp -n {} ./includes/ \;
-          if [ -d "./includes_tmp/YSI" ]; then cp -rn ./includes_tmp/YSI ./includes/; fi
-          if [ -d "./includes_tmp/include" ]; then cp -rn ./includes_tmp/include/* ./includes/; fi
 
       - name: Compile ZOmbieNPC.pwn
         run: |
